@@ -32,7 +32,8 @@ public class Block {
 		this.originX = originX;
 		this.originY = originY;
 		this.blockType = blockType;
-		this.color = Game.BLOCK_COLORS[blockType];
+		// Color is generated from the block type decremented, as a block type of 0 indicates a tile without a block
+		this.color = Game.BLOCK_COLORS[blockType-1];
 		assert xPositions.length == yPositions.length : "Uneven position counts were given on creation of a block.";
 	}
 

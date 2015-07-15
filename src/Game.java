@@ -13,15 +13,13 @@ import javax.swing.Timer;
  */
 public class Game {
 	public static void main(String[] args){
-		Testing.runTests();
-		//new Game(1,1);
+		//Testing.runTests();
+		new Game(1,1);
 	}
 
 	/**
 	 * STATIC
 	 */
-	// DEBUG MODE
-	public static final boolean DEBUG = false;
 
 	// The default initial dimensions of the game window
 	public static final int GAME_AREA_WIDTH = 240;
@@ -144,14 +142,30 @@ public class Game {
 	private void doBlocks(){
 		// Make a new block if necessary
 		if(isMakingNewBlock){
+			// Generate a random number corresponding to the number of block to use
 			int randomBlockNumber = (int)Math.floor(Math.random() * (BLOCK_X_POSITIONS.length));
+
+			// Generate a new array for the x positions of the new block
 			int[] newBlockXPositions = new int[BLOCK_X_POSITIONS[randomBlockNumber].length];
+
+			// Because the new block must appear in the center of the area, and BLOCK_X_POSITIONS gives values
+			// relative to this center, add half of the width of the area to every value in the array.
 			for(int i = 0; i < BLOCK_X_POSITIONS[randomBlockNumber].length; i++){
 				newBlockXPositions[i] = BLOCK_X_POSITIONS[randomBlockNumber][i] + (int)Math.floor(HORIZONTAL_TILES/2);
 			}
-			newBlock(newBlockXPositions, BLOCK_Y_POSITIONS[randomBlockNumber].clone(),
-			BLOCK_ORIGIN_X_POSITIONS[randomBlockNumber] + (int)Math.floor(HORIZONTAL_TILES/2),
-			BLOCK_ORIGIN_Y_POSITIONS[randomBlockNumber], randomBlockNumber);
+
+			// Make the new block
+			newBlock(
+						// x positions come from the array we just generated
+						newBlockXPositions,
+						// y positions come straight from the static array
+						BLOCK_Y_POSITIONS[randomBlockNumber].clone(),
+						// the origin x and y positions have static arrays
+						BLOCK_ORIGIN_X_POSITIONS[randomBlockNumber] + (int)Math.floor(HORIZONTAL_TILES/2),
+						BLOCK_ORIGIN_Y_POSITIONS[randomBlockNumber],
+						// and the block type comes from our random number incremented (as 0 indicates a tile without a block)
+						randomBlockNumber+1
+					);
 		}
 
 		// Check the last created block
@@ -167,7 +181,7 @@ public class Game {
 		}
 		isMakingNewBlock = false;
 
-		// Remove it from the tiles
+		// Remove it from the tile area
 		for(int i = 0; i < currentBlock.getXPositions().length; i++){
 			int delTileX = currentBlock.getXPositions()[i];
 			int delTileY = currentBlock.getYPositions()[i];
@@ -287,9 +301,6 @@ public class Game {
 
 		// Set the tiles to contain the block
 		for(int i = 0; i < x.length; i++){
-			if(DEBUG){
-				System.out.println("Adding tile at position [" + x[i] + "," + y[i] + "].");
-			}
 			tiles[ x[i] ][ y[i] ] = blockType;
 		}
 	}

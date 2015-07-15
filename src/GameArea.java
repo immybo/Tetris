@@ -52,14 +52,32 @@ public class GameArea extends JPanel implements KeyListener {
 	@Override
 	public void paint(Graphics g){
 		Graphics2D g2d = (Graphics2D) g;
-		// 'Clear' the graphics first
+
+		// First, we make an array of tiles and what color they should be
+		// This lets repainting be faster as it doesn't have to do any operations beyond accessing this array after clearing the graphics
+		// Removing a flickering effect
+
+		Color[][] tileColors = new Color[Game.HORIZONTAL_TILES][Game.VERTICAL_TILES];
+		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
+			for(int j = 0; j < Game.VERTICAL_TILES; j++){
+				int tileValue = gameInstance.getTileValue(i,j)-1;
+				if(tileValue == -1){
+					tileColors[i][j] = BACKGROUND_COLOR;
+					continue;
+				}
+				tileColors[i][j] = Game.BLOCK_COLORS[tileValue];
+			}
+		}
+
+		// 'Clear' the graphics
 		g2d.setColor(BACKGROUND_COLOR);
 		g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
 
+		// And finally paint the necessary graphics
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			for(int j = 0; j < Game.VERTICAL_TILES; j++){
 				if(gameInstance.getTileValue(i,j) != 0){
-					g2d.setColor(Game.BLOCK_COLORS[gameInstance.getTileValue(i,j)]);
+					g2d.setColor(tileColors[i][j]);
 					g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
 				}
 			}
