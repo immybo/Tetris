@@ -3,7 +3,7 @@ import java.awt.Color;
 /**
  * A collection of tiles that forms a block;
  * stores which tiles it corresponds to and what color it is.
- * 
+ *
  * @author Robert Campbell
  */
 public class Block {
@@ -14,7 +14,7 @@ public class Block {
 	// The point around which this block rotates
 	private int originX;
 	private int originY;
-	
+
 	/**
 	 * Constructor; creates a new Block
 	 * @param x The initial x positions of the block's tiles
@@ -32,7 +32,7 @@ public class Block {
 		this.color = color;
 		assert xPositions.length == yPositions.length : "Uneven position counts were given on creation of a block.";
 	}
-	
+
 	/**
 	 * Shifts each block down one tile
 	 */
@@ -42,7 +42,7 @@ public class Block {
 		}
 		originY++;
 	}
-	
+
 	/**
 	 * Shifts each block left one tile
 	 */
@@ -52,7 +52,7 @@ public class Block {
 		}
 		originX--;
 	}
-	
+
 	/**
 	 * Shifts each block right one tile
 	 */
@@ -62,7 +62,7 @@ public class Block {
 		}
 		originX++;
 	}
-	
+
 	/**
 	 * Removes the given tile position from the block
 	 * Assumes that the tile position exists on the block
@@ -70,17 +70,44 @@ public class Block {
 	public void removeTile(int x, int y){
 		int[] newXPositions = new int[xPositions.length-1];
 		int[] newYPositions = new int[yPositions.length-1];
-		for(int i = 0; i < newXPositions.length; i++){
+		for(int i = 0; i < xPositions.length-1; i++){
 			if(xPositions[i] != x || yPositions[i] != y){
 				newXPositions[i] = xPositions[i];
 				newYPositions[i] = yPositions[i];
 			}
-			else{
-				i--;
+		}
+		xPositions = newXPositions;
+		yPositions = newYPositions;
+	}
+
+	/**
+	 * Adds the given tile position to the block
+	 */
+	public void addTile(int x, int y){
+		int[] newXPositions = new int[xPositions.length+1];
+		int[] newYPositions = new int[yPositions.length+1];
+		for(int i = 0; i < xPositions.length; i++){
+			newXPositions[i] = xPositions[i];
+			newYPositions[i] = yPositions[i];
+		}
+		newXPositions[newXPositions.length-1] = x;
+		newYPositions[newYPositions.length-1] = y;
+		xPositions = newXPositions;
+		yPositions = newYPositions;
+	}
+
+	/**
+	 * Shifts the given tile down by one space
+	 */
+	public void shiftTileDown(int x, int y){
+		for(int i = 0; i < xPositions.length; i++){
+			if(xPositions[i] == x && yPositions[i] == y){
+				yPositions[i]++;
+				break;
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns the color of the block
 	 */
@@ -111,7 +138,7 @@ public class Block {
 	public int getOriginY(){
 		return originY;
 	}
-	
+
 	/**
 	 * Rotates the block in the specified direction
 	 */
@@ -136,35 +163,5 @@ public class Block {
 		}
 		xPositions = newXPositions;
 		yPositions = newYPositions;
-	}
-	
-	/**
-	 * Checks to see if the block can turn in the specified direction. Returns true if it can.
-	 */
-	public boolean canTurn(boolean isClockwise){
-		for(int i = 0; i < xPositions.length; i++){
-			int testY;
-			int testX;
-			int xDist = xPositions[i] - originX;
-			int yDist = yPositions[i] - originY;
-			
-			if(isClockwise){
-				testX = originX - yDist;
-				testY = originY + xDist;
-			}
-			else{
-				testX = originX + yDist;
-				testY = originY - xDist;
-			}
-			
-			if(testY < 0 || testY >= Game.VERTICAL_TILES){
-				return false;
-			}
-			
-			if(testX < 0 || testX >= Game.HORIZONTAL_TILES){
-				return false;
-			}
-		}
-		return true;
 	}
 }

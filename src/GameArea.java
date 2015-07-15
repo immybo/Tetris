@@ -69,5 +69,14 @@ public class GameArea extends JPanel implements KeyListener {
 				}
 			}
 		}
+		
+		// Draw a grid for clarity
+		g2d.setColor(Color.BLACK);
+		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
+			g2d.drawLine(i*Game.TILE_SIZE, 0, i*Game.TILE_SIZE, Game.VERTICAL_TILES*Game.TILE_SIZE);
+		}
+		for(int i = 0; i < Game.VERTICAL_TILES; i++){
+			g2d.drawLine(0, i*Game.TILE_SIZE, Game.HORIZONTAL_TILES*Game.TILE_SIZE, i*Game.TILE_SIZE);
+		}
 	}
 }
