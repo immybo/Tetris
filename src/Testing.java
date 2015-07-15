@@ -28,8 +28,8 @@ public class Testing {
 		assert w.getScore() == 1000 : "GUI score setting was not handled appropriately.";
 		w.setDifficulty(1);
 		assert w.getDifficulty() == 1 : "GUI difficulty setting was not handled appropriately.";
-		w.setLevel(100);
-		assert w.getLevel() == 100 : "GUI level setting was not handled appropriately.";
+		w.setLevel(2);
+		assert w.getLevel() == 2 : "GUI level setting was not handled appropriately.";
 
 		// Increment and decrement score and read them
 		w.incrementScore(10);
@@ -88,7 +88,9 @@ public class Testing {
 
 		// Create a line of full tiles on the bottom row
 		lineY = new int[Game.HORIZONTAL_TILES];
+		lineX = new int[Game.HORIZONTAL_TILES];
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
+			lineX[i] = i;
 			lineY[i] = Game.VERTICAL_TILES - 1;
 		}
 		w.newBlock(lineX, lineY, (int)Game.HORIZONTAL_TILES/2, Game.VERTICAL_TILES-1, Color.BLACK);

@@ -13,7 +13,7 @@ import javax.swing.Timer;
  */
 public class Game {
 	public static void main(String[] args){
-		Testing.runTests();
+		//Testing.runTests();
 		new Game(1,1);
 	}
 
@@ -24,8 +24,8 @@ public class Game {
 	public static final boolean DEBUG = false;
 
 	// The default initial dimensions of the game window
-	public static final int GAME_AREA_WIDTH = 480;
-	public static final int GAME_AREA_HEIGHT = 700;
+	public static final int GAME_AREA_WIDTH = 240;
+	public static final int GAME_AREA_HEIGHT = 720;
 	// The default initial dimensions of the GUI
 	public static final int GUI_WIDTH = 300;
 	public static final int GUI_HEIGHT = GAME_AREA_HEIGHT;
@@ -165,6 +165,7 @@ public class Game {
 			currentBlock = null;
 			// And check for any new tetrises
 			checkForTetris();
+			gameWindow.repaint();
 			return;
 		}
 		isMakingNewBlock = false;
@@ -194,9 +195,9 @@ public class Game {
 	public void checkForTetris(){
 		// Scroll through all rows in the gameplay area
 		outerloop:
-		for(int i = 0; i < Game.VERTICAL_TILES; i++){
+		for(int i = Game.VERTICAL_TILES-1; i >= 0; i--){
 			// Scroll through all tiles in the row, continuing the outer loop if one isn't full
-			for(int j = 0; j< Game.HORIZONTAL_TILES; j++){
+			for(int j = 0; j < Game.HORIZONTAL_TILES; j++){
 				if(tileBlocks[j][i] == null){
 					continue outerloop;
 				}
@@ -205,10 +206,14 @@ public class Game {
 			// Remove all tiles on the row and remove the references to them in their respective blocks
 			for(int j = 0; j < Game.HORIZONTAL_TILES; j++){
 				tileBlocks[j][i].removeTile(j,i);
-				tileBlocks[j][i] = null;
+				if(tileBlocks[j][i].getXPositions().length == 0){
+					blocks.remove(tileBlocks[j][i]);
+				}
 			}
+			refreshTileBlocks();
 			// Drop all tiles above them down by one
 			shiftTilesDown(i);
+			refreshTileBlocks();
 		}
 	}
 
@@ -226,7 +231,6 @@ public class Game {
 				}
 			}
 		}
-		refreshTileBlocks();
 	}
 
 	/**
@@ -424,6 +428,10 @@ public class Game {
 	private void refreshTileBlocks(){
 		tileBlocks = new Block[HORIZONTAL_TILES][VERTICAL_TILES];
 		for(int i = 0; i < blocks.size(); i++){
+			if(blocks.get(i).getXPositions().length == 0){
+				blocks.remove(i);
+				continue;
+			}
 			for(int j = 0; j < blocks.get(i).getXPositions().length; j++){
 				tileBlocks[ blocks.get(i).getXPositions()[j] ][ blocks.get(i).getYPositions()[j] ] = blocks.get(i);
 			}

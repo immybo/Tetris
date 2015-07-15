@@ -68,16 +68,27 @@ public class Block {
 	 * Assumes that the tile position exists on the block
 	 */
 	public void removeTile(int x, int y){
+		// DOES NOT CAUSE BUG
+
 		int[] newXPositions = new int[xPositions.length-1];
 		int[] newYPositions = new int[yPositions.length-1];
+		int removePos = -1;
 		for(int i = 0; i < xPositions.length-1; i++){
-			if(xPositions[i] != x || yPositions[i] != y){
-				newXPositions[i] = xPositions[i];
-				newYPositions[i] = yPositions[i];
+			if(xPositions[i] == x && yPositions[i] == y){
+				removePos = i;
 			}
 		}
-		xPositions = newXPositions;
-		yPositions = newYPositions;
+		assert removePos != -1 : "Remove position wasn't set!";
+		for(int i = 0; i < newXPositions.length; i++){
+			if(i == removePos){
+				continue;
+			}
+			newXPositions[i] = xPositions[i];
+			newYPositions[i] = yPositions[i];
+		}
+
+		xPositions = newXPositions.clone();
+		yPositions = newYPositions.clone();
 	}
 
 	/**
@@ -92,8 +103,8 @@ public class Block {
 		}
 		newXPositions[newXPositions.length-1] = x;
 		newYPositions[newYPositions.length-1] = y;
-		xPositions = newXPositions;
-		yPositions = newYPositions;
+		xPositions = newXPositions.clone();
+		yPositions = newYPositions.clone();
 	}
 
 	/**
@@ -103,7 +114,6 @@ public class Block {
 		for(int i = 0; i < xPositions.length; i++){
 			if(xPositions[i] == x && yPositions[i] == y){
 				yPositions[i]++;
-				break;
 			}
 		}
 	}
