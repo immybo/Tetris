@@ -13,8 +13,8 @@ import javax.swing.Timer;
  */
 public class Game {
 	public static void main(String[] args){
-		//Testing.runTests();
-		new Game(1,1);
+		Testing.runTests();
+		//new Game(1,1);
 	}
 
 	/**
@@ -75,9 +75,8 @@ public class Game {
 	private double score = 0;
 	private GameWindow gameWindow;
 
-	// Stores the block in each tile; [0,0] is top left, [max,max] is bottom right
-	private Block[][] tileBlocks = new Block[HORIZONTAL_TILES][VERTICAL_TILES];
-	private ArrayList<Block> blocks = new ArrayList<Block>();
+	// Stores the type of block in each tile; [0,0] is top left, [max,max] is bottom right
+	private int[][] tiles = new int[HORIZONTAL_TILES][VERTICAL_TILES];
 	private Block currentBlock;
 
 	// Whether or not the down button is currently pressed down
@@ -152,9 +151,7 @@ public class Game {
 			}
 			newBlock(newBlockXPositions, BLOCK_Y_POSITIONS[randomBlockNumber].clone(),
 			BLOCK_ORIGIN_X_POSITIONS[randomBlockNumber] + (int)Math.floor(HORIZONTAL_TILES/2),
-			BLOCK_ORIGIN_Y_POSITIONS[randomBlockNumber], BLOCK_COLORS[randomBlockNumber]);
-			// Set the current block to be this block
-			currentBlock = blocks.get(blocks.size()-1);
+			BLOCK_ORIGIN_Y_POSITIONS[randomBlockNumber], randomBlockNumber);
 		}
 
 		// Check the last created block
@@ -170,19 +167,19 @@ public class Game {
 		}
 		isMakingNewBlock = false;
 
-		// Remove it from tileblocks
+		// Remove it from the tiles
 		for(int i = 0; i < currentBlock.getXPositions().length; i++){
 			int delTileX = currentBlock.getXPositions()[i];
 			int delTileY = currentBlock.getYPositions()[i];
-			tileBlocks[delTileX][delTileY] = null;
+			tiles[delTileX][delTileY] = 0;
 		}
 
 		// And shift it down if it can be shifted down
 		currentBlock.shiftDown();
 
-		// Then re-add it to tileblocks
+		// Then re-add it to the tiles
 		for(int i = 0; i < currentBlock.getXPositions().length; i++){
-			tileBlocks[ currentBlock.getXPositions()[i] ][ currentBlock.getYPositions()[i] ] = currentBlock;
+			tiles[ currentBlock.getXPositions()[i] ][ currentBlock.getYPositions()[i] ] = currentBlock.getBlockType();
 		}
 
 		gameWindow.repaint();
@@ -198,22 +195,17 @@ public class Game {
 		for(int i = Game.VERTICAL_TILES-1; i >= 0; i--){
 			// Scroll through all tiles in the row, continuing the outer loop if one isn't full
 			for(int j = 0; j < Game.HORIZONTAL_TILES; j++){
-				if(tileBlocks[j][i] == null){
+				if(tiles[j][i] == 0){
 					continue outerloop;
 				}
 			}
 			// If all tiles are occupied,
 			// Remove all tiles on the row and remove the references to them in their respective blocks
 			for(int j = 0; j < Game.HORIZONTAL_TILES; j++){
-				tileBlocks[j][i].removeTile(j,i);
-				if(tileBlocks[j][i].getXPositions().length == 0){
-					blocks.remove(tileBlocks[j][i]);
-				}
+				tiles[j][i] = 0;
 			}
-			refreshTileBlocks();
 			// Drop all tiles above them down by one
 			shiftTilesDown(i);
-			refreshTileBlocks();
 		}
 	}
 
@@ -225,9 +217,10 @@ public class Game {
 		// Scroll through the rows in reverse order (up vertically) so as not to override rows which we drop down in future
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			for(int j = y-1; j >= 0; j--){
-				// Do nothing to tiles which are null
-				if(tileBlocks[i][j] != null){
-					tileBlocks[i][j].shiftTileDown(i,j);
+				// Do nothing to tiles which don't have anything on them
+				if(tiles[i][j] != 0){
+					tiles[i][j+1] = tiles[i][j];
+					tiles[i][j] = 0;
 				}
 			}
 		}
@@ -247,7 +240,7 @@ public class Game {
 			if(checkYPosition >= VERTICAL_TILES){
 				return false;
 			}
-			if( tileBlocks[checkXPosition][checkYPosition] != null && tileBlocks[checkXPosition][checkYPosition] != block){
+			if( tiles[checkXPosition][checkYPosition] != 0 && !block.containsPos(checkXPosition,checkYPosition) ){
 				return false;
 			}
 		}
@@ -267,7 +260,7 @@ public class Game {
 		// Scroll through tiles and make sure they are null.
 		for(int i = 0; i < x.length; i++){
 			// If any tile is full, return false
-			if(tileBlocks[ x[i] ][ y[i] ] != null){
+			if(tiles[ x[i] ][ y[i] ] != 0){
 				return false;
 			}
 		}
@@ -285,46 +278,42 @@ public class Game {
 	 * @param originY The central y position.
 	 * @param color   The color of the block.
 	 */
-	public void newBlock(int[] x, int[] y, int originX, int originY, Color color){
+	public void newBlock(int[] x, int[] y, int originX, int originY, int blockType){
 		// Assert that all tiles are initially empty
 		assert areTilesEmpty(x, y) : "Not all tiles are empty when attempting to fill them.";
 
 		// Create a new block in the given tiles
-		Block newBlock = new Block(x, y, originX, originY, color);
+		currentBlock = new Block(x, y, originX, originY, blockType);
 
 		// Set the tiles to contain the block
 		for(int i = 0; i < x.length; i++){
 			if(DEBUG){
 				System.out.println("Adding tile at position [" + x[i] + "," + y[i] + "].");
 			}
-			tileBlocks[ x[i] ][ y[i] ] = newBlock;
+			tiles[ x[i] ][ y[i] ] = blockType;
 		}
-
-		blocks.add(newBlock);
 	}
 
 	/**
 	 * Attempts to empty a given list of tiles; deleting an existing block.
-	 * Assumes that at least one of the given tiles is not empty.
 	 *
 	 * @param x An array of tile x positions.
 	 * @param y An array of tile y positions.
 	 */
 	public void emptyTiles(int[] x, int[] y){
-		assert !areTilesEmpty(x, y) : "All tiles are empty when attempting to empty them.";
-
-		// Find the block corresponding to the given tiles if they have one
+		// Set all of the given tiles to 0
 		for(int i = 0; i < x.length; i++){
 			for(int j = 0; j < y.length; j++){
-				Block block = tileBlocks[i][j];
-				if(block != null){
-					// Remove the tile from the block
-					block.removeTile(i, j);
-					// Remove reference to the block from that specific tile (nullify the tile)
-					tileBlocks[i][j] = null;
-				}
+				tiles[i][j] = 0;
 			}
 		}
+	}
+
+	/**
+	 * Gets the value of a certain tile
+	 */
+	public int getTileValue(int x, int y){
+		return tiles[x][y];
 	}
 
 	/**
@@ -332,16 +321,6 @@ public class Game {
 	 */
 	public void redraw(){
 		gameWindow.repaint();
-	}
-
-	/**
-	 * Returns the block at a specified tile positions (or null if the block doesn't exist).
-	 */
-	public Block getBlockAtTile(int x, int y){
-		if(tileBlocks[x][y] != null){
-			return tileBlocks[x][y];
-		}
-		return null;
 	}
 
 	/**
@@ -399,14 +378,13 @@ public class Game {
 	 * Moves the last block horizontally one tile
 	 */
 	public void moveHorizontally(boolean isRight){
-		if(blocks.size() == 0){ return; }
-		if(!isValidHorizontal(isRight,blocks.size()-1)){ return; }
 		if(currentBlock == null){ return; }
+		if(!isValidHorizontal(isRight)){ return; }
 
 		for(int i = 0; i < currentBlock.getXPositions().length; i++){
 			int delTileX = currentBlock.getXPositions()[i];
 			int delTileY = currentBlock.getYPositions()[i];
-			tileBlocks[delTileX][delTileY] = null;
+			tiles[delTileX][delTileY] = 0;
 		}
 
 		if(isRight){
@@ -416,45 +394,25 @@ public class Game {
 			currentBlock.shiftLeft();
 		}
 
-		// Then re-add it to tileblocks
-		refreshTileBlocks();
-
 		gameWindow.repaint();
 	}
 
 	/**
-	 * Refreshes where to draw blocks, must be called before redrawing
-	 */
-	private void refreshTileBlocks(){
-		tileBlocks = new Block[HORIZONTAL_TILES][VERTICAL_TILES];
-		for(int i = 0; i < blocks.size(); i++){
-			if(blocks.get(i).getXPositions().length == 0){
-				blocks.remove(i);
-				continue;
-			}
-			for(int j = 0; j < blocks.get(i).getXPositions().length; j++){
-				tileBlocks[ blocks.get(i).getXPositions()[j] ][ blocks.get(i).getYPositions()[j] ] = blocks.get(i);
-			}
-		}
-	}
-
-	/**
-	 * Checks to see if a block can move horizontally
+	 * Checks to see if the current block can move horizontally
 	 * @param isRight True if you're checking to the right, false if not
-	 * @param i The index of the block to use in the blocks array
 	 */
-	private boolean isValidHorizontal(boolean isRight, int i){
+	private boolean isValidHorizontal(boolean isRight){
 		// Check that there is no block to the right/left of it (otherwise don't shift)
 		// For every point in the block, check to see if it's on the right/left of the screen
-		for(int k = 0; k < blocks.get(i).getXPositions().length; k++){
+		for(int k = 0; k < currentBlock.getXPositions().length; k++){
 			int checkXPosition;
-			if(isRight){ checkXPosition = blocks.get(i).getXPositions()[k] + 1; }
-			else       { checkXPosition = blocks.get(i).getXPositions()[k] - 1; }
-			int checkYPosition = blocks.get(i).getYPositions()[k];
+			if(isRight){ checkXPosition = currentBlock.getXPositions()[k] + 1; }
+			else       { checkXPosition = currentBlock.getXPositions()[k] - 1; }
+			int checkYPosition = currentBlock.getYPositions()[k];
 			if(checkXPosition >= HORIZONTAL_TILES || checkXPosition < 0){
 				return false;
 			}
-			if( tileBlocks[checkXPosition][checkYPosition] != null && tileBlocks[checkXPosition][checkYPosition] != blocks.get(i) ){
+			if( tiles[checkXPosition][checkYPosition] != 0 && !currentBlock.containsPos(checkXPosition, checkYPosition) ){
 				return false;
 			}
 		}
@@ -484,7 +442,6 @@ public class Game {
 		if(!pieceCanTurn(isClockwise)){ return; }
 		if(currentBlock == null){ return; }
 		currentBlock.turn(isClockwise);
-		refreshTileBlocks();
 	}
 
 	/**
@@ -522,15 +479,11 @@ public class Game {
 				return false;
 			}
 			// 3. Other blocks
-			for(Block b: blocks){
-				// Obviously we want to skip looking at the block we're evaluating
-				if(b == currentBlock){ continue; }
-
-				// Go through every tile contained within the other block
-				for(int j = 0; j < b.getXPositions().length; j++){
-					if(testX == b.getXPositions()[j] && testY == b.getYPositions()[j]){
-						return false;
-					}
+			for(int j = 0; j < tiles.length; j++){
+				for(int k = 0; k < tiles[0].length; k++){
+					// Obviously we want to skip looking at the block we're evaluating
+					if(currentBlock.containsPos(j,k)){ continue; }
+					if(tiles[j][k] != 0){ return false; }
 				}
 			}
 		}

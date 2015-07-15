@@ -41,28 +41,28 @@ public class Testing {
 		assert w.getScore() == 0 : "GUI score was not decremented below 0 appropriately.";
 
 		// Get some tiles to make sure they're not filled
-		assert w.getBlockAtTile(Game.HORIZONTAL_TILES-1, Game.VERTICAL_TILES-1) == null : "Game area was not created blank at [max,max].";
-		assert w.getBlockAtTile(0, 0) == null : "Game area was not created blank at [0,0].";
-		assert w.getBlockAtTile(Game.HORIZONTAL_TILES-1, 0) == null : "Game area was not created blank at [max,0].";
-		assert w.getBlockAtTile(0, Game.VERTICAL_TILES-1) == null : "Game area was not created blank at [0,max].";
+		assert w.getTileValue(Game.HORIZONTAL_TILES-1, Game.VERTICAL_TILES-1) == 0 : "Game area was not created blank at [max,max].";
+		assert w.getTileValue(0, 0) == 0 : "Game area was not created blank at [0,0].";
+		assert w.getTileValue(Game.HORIZONTAL_TILES-1, 0) == 0 : "Game area was not created blank at [max,0].";
+		assert w.getTileValue(0, Game.VERTICAL_TILES-1) == 0 : "Game area was not created blank at [0,max].";
 
 		// Fill some tiles and make sure they're filled
 		int[] fillX = { 0, 0, Game.HORIZONTAL_TILES-1, Game.HORIZONTAL_TILES-1 };
 		int[] fillY = { 0, Game.VERTICAL_TILES-1, Game.VERTICAL_TILES-1, 0 };
-		w.newBlock(fillX, fillY, 0, 0, Color.BLACK);
+		w.newBlock(fillX, fillY, 0, 0, 1);
 
-		assert w.getBlockAtTile(0,0) != null : "Tile was not created properly at [0,0].";
-		assert w.getBlockAtTile(0, Game.VERTICAL_TILES-1) != null : "Tile was not created properly at [0,max].";
-		assert w.getBlockAtTile(Game.HORIZONTAL_TILES-1, 0) != null : "Tile was not created properly at [max,0].";
-		assert w.getBlockAtTile(Game.HORIZONTAL_TILES-1, Game.VERTICAL_TILES-1) != null : "Tile was not created properly at [max,max].";
+		assert w.getTileValue(0,0) != 0 : "Tile was not created properly at [0,0].";
+		assert w.getTileValue(0, Game.VERTICAL_TILES-1) != 0 : "Tile was not created properly at [0,max].";
+		assert w.getTileValue(Game.HORIZONTAL_TILES-1, 0) != 0 : "Tile was not created properly at [max,0].";
+		assert w.getTileValue(Game.HORIZONTAL_TILES-1, Game.VERTICAL_TILES-1) != 0 : "Tile was not created properly at [max,max].";
 
 		// Empty the tiles and make sure they're empty
 		w.emptyTiles(fillX, fillY);
 
-		assert w.getBlockAtTile(0,0) == null : "Tile was not emptied properly at [0,0].";
-		assert w.getBlockAtTile(0, Game.VERTICAL_TILES-1) == null : "Tile was not emptied properly at [0,max].";
-		assert w.getBlockAtTile(Game.HORIZONTAL_TILES-1, 0) == null : "Tile was not emptied properly at [max,0].";
-		assert w.getBlockAtTile(Game.HORIZONTAL_TILES-1, Game.VERTICAL_TILES-1) == null : "Tile was not emptied properly at [max,max].";
+		assert w.getTileValue(0,0) == 0 : "Tile was not emptied properly at [0,0].";
+		assert w.getTileValue(0, Game.VERTICAL_TILES-1) == 0 : "Tile was not emptied properly at [0,max].";
+		assert w.getTileValue(Game.HORIZONTAL_TILES-1, 0) == 0 : "Tile was not emptied properly at [max,0].";
+		assert w.getTileValue(Game.HORIZONTAL_TILES-1, Game.VERTICAL_TILES-1) == 0 : "Tile was not emptied properly at [max,max].";
 
 		// Test tetris checking
 		int[] lineX = new int[Game.HORIZONTAL_TILES];
@@ -70,17 +70,17 @@ public class Testing {
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			lineX[i] = i;
 		}
-		w.newBlock(lineX, lineY, (int)Game.HORIZONTAL_TILES/2, 0, Color.BLACK);
+		w.newBlock(lineX, lineY, (int)Game.HORIZONTAL_TILES/2, 0, 1);
 
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
-			assert w.getBlockAtTile(i, 0) != null : "Block was not created properly along the top row.";
+			assert w.getTileValue(i, 0) != 0 : "Block was not created properly along the top row.";
 		}
 		w.checkForTetris();
 
 		// Check for non-empty tiles - after checking for the tetris, there should be no filled tiles anywhere
 		for(int i = 0; i < Game.VERTICAL_TILES; i++){
 			for(int j = 0; j < Game.HORIZONTAL_TILES; j++){
-				assert w.getBlockAtTile(i, j) == null : "Block was erroneously present at (" + i + "," + j + ") after checking for and removing a tetris in line 0.";
+				assert w.getTileValue(i, j) == 0 : "Block was erroneously present at (" + i + "," + j + ") after checking for and removing a tetris in line 0.";
 			}
 		}
 
@@ -93,18 +93,18 @@ public class Testing {
 			lineX[i] = i;
 			lineY[i] = Game.VERTICAL_TILES - 1;
 		}
-		w.newBlock(lineX, lineY, (int)Game.HORIZONTAL_TILES/2, Game.VERTICAL_TILES-1, Color.BLACK);
+		w.newBlock(lineX, lineY, (int)Game.HORIZONTAL_TILES/2, Game.VERTICAL_TILES-1, 1);
 
 		// Create a block above the line of full tiles
 		int[] blockY = {Game.VERTICAL_TILES-2, Game.VERTICAL_TILES-2, Game.VERTICAL_TILES-3, Game.VERTICAL_TILES-3};
 		int[] blockX = {5, 6, 5, 6};
-		w.newBlock(blockX, blockY, Game.VERTICAL_TILES-2, 5, Color.BLACK);
+		w.newBlock(blockX, blockY, Game.VERTICAL_TILES-2, 5, 1);
 
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
-			assert w.getBlockAtTile(i, Game.VERTICAL_TILES-1) != null : "Block was not created properly along the bottom row.";
+			assert w.getTileValue(i, Game.VERTICAL_TILES-1) != 0 : "Block was not created properly along the bottom row.";
 		}
 		for(int i = 0; i < 4; i++){
-			assert w.getBlockAtTile(blockX[i], blockY[i]) != null : "Block was not created properly above the bottom row.";
+			assert w.getTileValue(blockX[i], blockY[i]) != 0 : "Block was not created properly above the bottom row.";
 		}
 
 		// Remove the tetris
@@ -112,7 +112,7 @@ public class Testing {
 
 		// Check to make sure that the block has dropped down properly
 		for(int i = 0; i < 4; i++){
-			assert w.getBlockAtTile(blockX[i], blockY[i]+1) != null : "Tetris did not result in appropriate relocation of block from ("+blockX[i]+","+blockY[i]+") down one tile.";
+			assert w.getTileValue(blockX[i], blockY[i]+1) != 0 : "Tetris did not result in appropriate relocation of block from ("+blockX[i]+","+blockY[i]+") down one tile.";
 		}
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			for(int j = 0; j < Game.VERTICAL_TILES; j++){
@@ -120,7 +120,7 @@ public class Testing {
 					if((i == blockX[k]) && (j == blockY[k])){
 						break;
 					}
-					assert w.getBlockAtTile(i,j) == null : "Tetris erroneously resulted in a block at ("+i+","+j+").";
+					assert w.getTileValue(i,j) == 0 : "Tetris erroneously resulted in a block at ("+i+","+j+").";
 				}
 			}
 		}
@@ -132,10 +132,10 @@ public class Testing {
 	public static void testBlock(){
 		// Construct a new block
 		int[] posArray = {1, 2, 3};
-		Block b = new Block(posArray, posArray, 2, 2, Color.BLACK);
+		Block b = new Block(posArray, posArray, 2, 2, 1);
 
 		// Assert the initial values of the block
-		assert b.getColor() == Color.BLACK : "Block.getColor did not return matching color.";
+		assert b.getColor() == Game.BLOCK_COLORS[0] : "Block.getColor did not return matching color.";
 		assert b.getXPositions() == posArray : "Block.getXPositions did not return matching array.";
 		assert b.getYPositions() == posArray : "Block.getYPositions did not return matching array.";
 		assert b.getOriginX() == 2 : "Block.getOriginX did not return matching value.";

@@ -15,6 +15,8 @@ public class Block {
 	private int originX;
 	private int originY;
 
+	private int blockType;
+
 	/**
 	 * Constructor; creates a new Block
 	 * @param x The initial x positions of the block's tiles
@@ -24,12 +26,13 @@ public class Block {
 	 * @param color The colour of the block
 	 * Assumes that both arrays are the same size, otherwise throws an exception
 	 */
-	public Block(int[] x, int[] y, int originX, int originY, Color color){
+	public Block(int[] x, int[] y, int originX, int originY, int blockType){
 		xPositions = x;
 		yPositions = y;
 		this.originX = originX;
 		this.originY = originY;
-		this.color = color;
+		this.blockType = blockType;
+		this.color = Game.BLOCK_COLORS[blockType];
 		assert xPositions.length == yPositions.length : "Uneven position counts were given on creation of a block.";
 	}
 
@@ -119,6 +122,12 @@ public class Block {
 	}
 
 	/**
+	 * Returns the type of the block
+	 */
+	public int getBlockType(){
+		return blockType;
+	}
+	/**
 	 * Returns the color of the block
 	 */
 	public Color getColor(){
@@ -173,5 +182,17 @@ public class Block {
 		}
 		xPositions = newXPositions;
 		yPositions = newYPositions;
+	}
+
+	/**
+	 * Checks if this block contains the given position
+	 */
+	public boolean containsPos(int x, int y){
+		for(int i = 0; i < xPositions.length; i++){
+			if(x == xPositions[i] && y == yPositions[i]){
+				return true;
+			}
+		}
+		return false;
 	}
 }
