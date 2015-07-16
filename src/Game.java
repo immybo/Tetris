@@ -74,6 +74,7 @@ public class Game {
 	private GameWindow gameWindow;
 
 	// Stores the type of block in each tile; [0,0] is top left, [max,max] is bottom right
+	// We need 2 tiles above to store blocks as they spawn above the top of the visible area
 	private int[][] tiles = new int[HORIZONTAL_TILES][VERTICAL_TILES];
 	private Block currentBlock;
 
@@ -166,37 +167,34 @@ public class Game {
 						// and the block type comes from our random number incremented (as 0 indicates a tile without a block)
 						randomBlockNumber+1
 					);
+			// Wait until the next iteration to move the block
+			redraw();
+			isMakingNewBlock = false;
+			return;
 		}
 
 		// Check the last created block
 		if(!checkValidFall(currentBlock)) {
 			// If it can't go down any further, make a new block!
 			isMakingNewBlock = true;
+			// Place the current block into the tile area
+			for(int i = 0; i < currentBlock.getXPositions().length; i++){
+				tiles[ currentBlock.getXPositions()[i] ][ currentBlock.getYPositions()[i] ] = currentBlock.getBlockType();
+			}
 			// Nullify the current block
 			currentBlock = null;
 			// And check for any new tetrises
 			checkForTetris();
-			gameWindow.repaint();
-			return;
+			redraw();
 		}
-		isMakingNewBlock = false;
+		else{
+			isMakingNewBlock = false;
 
-		// Remove it from the tile area
-		for(int i = 0; i < currentBlock.getXPositions().length; i++){
-			int delTileX = currentBlock.getXPositions()[i];
-			int delTileY = currentBlock.getYPositions()[i];
-			tiles[delTileX][delTileY] = 0;
+			// Shift it down if it can be shifted down
+			currentBlock.shiftDown();
+
+			redraw();
 		}
-
-		// And shift it down if it can be shifted down
-		currentBlock.shiftDown();
-
-		// Then re-add it to the tiles
-		for(int i = 0; i < currentBlock.getXPositions().length; i++){
-			tiles[ currentBlock.getXPositions()[i] ][ currentBlock.getYPositions()[i] ] = currentBlock.getBlockType();
-		}
-
-		gameWindow.repaint();
 	}
 
 	/**
@@ -271,7 +269,7 @@ public class Game {
 	public boolean areTilesEmpty(int[] x, int[] y){
 		assertValidTiles(x, y);
 
-		// Scroll through tiles and make sure they are null.
+		// Scroll through tiles and make sure they are 0.
 		for(int i = 0; i < x.length; i++){
 			// If any tile is full, return false
 			if(tiles[ x[i] ][ y[i] ] != 0){
@@ -298,15 +296,17 @@ public class Game {
 
 		// Create a new block in the given tiles
 		currentBlock = new Block(x, y, originX, originY, blockType);
-
-		// Set the tiles to contain the block
-		for(int i = 0; i < x.length; i++){
-			tiles[ x[i] ][ y[i] ] = blockType;
-		}
 	}
 
 	/**
-	 * Attempts to empty a given list of tiles; deleting an existing block.
+	 * Returns the current block
+	 */
+	public Block getCurrentBlock(){
+		return currentBlock;
+	}
+
+	/**
+	 * Attempts to empty a given list of tiles.
 	 *
 	 * @param x An array of tile x positions.
 	 * @param y An array of tile y positions.
@@ -328,7 +328,7 @@ public class Game {
 	}
 
 	/**
-	 * Redraws every block
+	 * Redraws the game
 	 */
 	public void redraw(){
 		gameWindow.repaint();
@@ -489,14 +489,8 @@ public class Game {
 			if(testX < 0 || testX >= Game.HORIZONTAL_TILES){
 				return false;
 			}
-			// 3. Other blocks
-			for(int j = 0; j < tiles.length; j++){
-				for(int k = 0; k < tiles[0].length; k++){
-					// Obviously we want to skip looking at the block we're evaluating
-					if(currentBlock.containsPos(j,k)){ continue; }
-					if(tiles[j][k] != 0){ return false; }
-				}
-			}
+			// 3. Other tiles
+			if(tiles[testX][testY] != 0){ return false; }
 		}
 		return true;
 	}

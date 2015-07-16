@@ -68,6 +68,14 @@ public class GameArea extends JPanel implements KeyListener {
 				tileColors[i][j] = Game.BLOCK_COLORS[tileValue];
 			}
 		}
+		// Grab the tiles from the current block as well
+		Block currentBlock = gameInstance.getCurrentBlock();
+		if(currentBlock != null){
+			Color tileValue = currentBlock.getColor();
+			for(int i = 0; i < currentBlock.getXPositions().length; i++){
+				tileColors[currentBlock.getXPositions()[i]][currentBlock.getYPositions()[i]] = tileValue;
+			}
+		}
 
 		// 'Clear' the graphics
 		g2d.setColor(BACKGROUND_COLOR);
@@ -76,10 +84,8 @@ public class GameArea extends JPanel implements KeyListener {
 		// And finally paint the necessary graphics
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			for(int j = 0; j < Game.VERTICAL_TILES; j++){
-				if(gameInstance.getTileValue(i,j) != 0){
-					g2d.setColor(tileColors[i][j]);
-					g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
-				}
+				g2d.setColor(tileColors[i][j]);
+				g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
 			}
 		}
 
