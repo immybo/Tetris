@@ -1,27 +1,26 @@
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 import java.awt.*;
 
 /**
- * A GameWindow is an instance of the graphical aspects of the game.
- * It includes abstracted methods for drawing objects at points in the window.
+ * The post-main screen graphics of the game,
+ * including the GUI and the gameplay area.
  *
  * @author Robert Campbell
  */
-public class GameWindow {
+public class GameScreen{
 	private JFrame frame;
 	private JPanel gameArea;
 	private JPanel gui;
 	private Game gameInstance;
 
-	public GameWindow(Game gameInstance){
+	public GameScreen(Game gameInstance){
 		this.gameInstance = gameInstance;
 
 		// Initialise the frame
 		frame = new JFrame("TETRIS");
 		frame.setSize(Game.GAME_AREA_WIDTH + Game.GUI_WIDTH, Game.GAME_AREA_HEIGHT);
 		frame.setLocation(100, 100);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		// Set up the panels
 		gameArea = new GameArea(this.gameInstance);

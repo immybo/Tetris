@@ -10,6 +10,8 @@ import javax.swing.*;
  */
 public class GameArea extends JPanel implements KeyListener {
 	private static Color BACKGROUND_COLOR = Color.WHITE;
+	// Stores the tile colors from the last iteration to see which ones have changed
+	private Color[][] oldTileColors;
 
 	Game gameInstance;
 
@@ -57,7 +59,10 @@ public class GameArea extends JPanel implements KeyListener {
 		// This lets repainting be faster as it doesn't have to do any operations beyond accessing this array after clearing the graphics
 		// Removing a flickering effect
 
+		// For optimisation, we don't actually need to redraw every tile every frame. Instead, we just check which ones have changed.
+
 		Color[][] tileColors = new Color[Game.HORIZONTAL_TILES][Game.VERTICAL_TILES];
+
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			for(int j = 0; j < Game.VERTICAL_TILES; j++){
 				int tileValue = gameInstance.getTileValue(i,j)-1;
@@ -73,23 +78,36 @@ public class GameArea extends JPanel implements KeyListener {
 		if(currentBlock != null){
 			Color tileValue = currentBlock.getColor();
 			for(int i = 0; i < currentBlock.getXPositions().length; i++){
+				// If this point is above the screen, don't draw it
+				if(currentBlock.getYPositions()[i] < 0){
+					continue;
+				}
 				tileColors[currentBlock.getXPositions()[i]][currentBlock.getYPositions()[i]] = tileValue;
 			}
 		}
 
-		// 'Clear' the graphics
-		g2d.setColor(BACKGROUND_COLOR);
-		g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
-
-		// And finally paint the necessary graphics
-		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
-			for(int j = 0; j < Game.VERTICAL_TILES; j++){
-				g2d.setColor(tileColors[i][j]);
-				g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
+		// If it's the first frame, just draw everything
+		if(oldTileColors == null){
+			for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
+				for(int j = 0; j < Game.VERTICAL_TILES; j++){
+					g2d.setColor(tileColors[i][j]);
+					g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
+				}
+			}
+		}
+		// Otherwise, scroll through all tiles and check to see which ones have changed, redrawing only those ones.
+		else{
+			for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
+				for(int j = 0; j < Game.VERTICAL_TILES; j++){
+					if(tileColors[i][j] != oldTileColors[i][j]){
+						g2d.setColor(tileColors[i][j]);
+						g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
+					}
+				}
 			}
 		}
 
-		// Draw a grid for clarity
+		// Afterwards, draw a grid for clarity
 		g2d.setColor(Color.BLACK);
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			g2d.drawLine(i*Game.TILE_SIZE, 0, i*Game.TILE_SIZE, Game.VERTICAL_TILES*Game.TILE_SIZE);
@@ -97,5 +115,7 @@ public class GameArea extends JPanel implements KeyListener {
 		for(int i = 0; i < Game.VERTICAL_TILES; i++){
 			g2d.drawLine(0, i*Game.TILE_SIZE, Game.HORIZONTAL_TILES*Game.TILE_SIZE, i*Game.TILE_SIZE);
 		}
+
+		oldTileColors = tileColors.clone();
 	}
 }

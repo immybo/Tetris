@@ -22,7 +22,7 @@ public class Game {
 	 */
 
 	// The default initial dimensions of the game window
-	public static final int GAME_AREA_WIDTH = 240;
+	public static final int GAME_AREA_WIDTH = 360;
 	public static final int GAME_AREA_HEIGHT = 720;
 	// The default initial dimensions of the GUI
 	public static final int GUI_WIDTH = 300;
@@ -35,7 +35,7 @@ public class Game {
 	public static final int FALL_DELAY = 250;
 	// The millisecond value of the fall delay at a given level is:
 	// FALL_DELAY * 1/ e^(level*FALL_DECREASE_MULTIPLIER)
-	public static final double FALL_DECREASE_MULTIPLIER = 0.03;
+	public static final double FALL_DECREASE_MULTIPLIER = 0.01;
 	// The multiplier for fall delay given that the down button is pressed
 	public static final double DOWN_BUTTON_MULTIPLIER = 0.1;
 
@@ -71,7 +71,7 @@ public class Game {
 	private int difficulty;
 	private int level;
 	private double score = 0;
-	private GameWindow gameWindow;
+	private GameScreen gameWindow;
 
 	// Stores the type of block in each tile; [0,0] is top left, [max,max] is bottom right
 	// We need 2 tiles above to store blocks as they spawn above the top of the visible area
@@ -99,7 +99,7 @@ public class Game {
 		this.difficulty = difficulty;
 		this.level = initialLevel;
 
-		gameWindow = new GameWindow(this);
+		gameWindow = new GameScreen(this);
 
 		// Continuously makes block tasks occur on a timer
 		blockPerformer = new ActionListener(){
@@ -107,17 +107,16 @@ public class Game {
 				doBlocks();
 			}
 		};
-		blockTimer = new Timer(FALL_DELAY, blockPerformer);
-		blockTimer.start();
+		resetBlockTimer();
 	}
 
 	/**
 	 * Restarts the block timer with a new value
 	 */
 	public void resetBlockTimer(){
-		int timeGap = FALL_DELAY * 1/ (int)Math.pow(Math.E, level*FALL_DECREASE_MULTIPLIER);
+		int timeGap = FALL_DELAY * 1/ (int)Math.pow(Math.E, level*FALL_DECREASE_MULTIPLIER) / difficulty;
 		if(isDownButton){ timeGap *= DOWN_BUTTON_MULTIPLIER; }
-		blockTimer.stop();
+		if(blockTimer != null){ blockTimer.stop(); }
 		blockTimer = new Timer(timeGap, blockPerformer);
 		blockTimer.start();
 	}
@@ -143,24 +142,29 @@ public class Game {
 	private void doBlocks(){
 		// Make a new block if necessary
 		if(isMakingNewBlock){
+			if(level != 1) { level++; }
 			// Generate a random number corresponding to the number of block to use
 			int randomBlockNumber = (int)Math.floor(Math.random() * (BLOCK_X_POSITIONS.length));
 
 			// Generate a new array for the x positions of the new block
 			int[] newBlockXPositions = new int[BLOCK_X_POSITIONS[randomBlockNumber].length];
+			// And one for the y positions
+			int[] newBlockYPositions = new int[BLOCK_Y_POSITIONS[randomBlockNumber].length];
 
 			// Because the new block must appear in the center of the area, and BLOCK_X_POSITIONS gives values
 			// relative to this center, add half of the width of the area to every value in the array.
+			// We also have to subtract some from the y positions to make the block initially above the screen
 			for(int i = 0; i < BLOCK_X_POSITIONS[randomBlockNumber].length; i++){
 				newBlockXPositions[i] = BLOCK_X_POSITIONS[randomBlockNumber][i] + (int)Math.floor(HORIZONTAL_TILES/2);
+				newBlockYPositions[i] = BLOCK_Y_POSITIONS[randomBlockNumber][i] - 2;
 			}
 
 			// Make the new block
 			newBlock(
 						// x positions come from the array we just generated
 						newBlockXPositions,
-						// y positions come straight from the static array
-						BLOCK_Y_POSITIONS[randomBlockNumber].clone(),
+						// y positions also come from an array we just generated
+						newBlockYPositions,
 						// the origin x and y positions have static arrays
 						BLOCK_ORIGIN_X_POSITIONS[randomBlockNumber] + (int)Math.floor(HORIZONTAL_TILES/2),
 						BLOCK_ORIGIN_Y_POSITIONS[randomBlockNumber],
@@ -177,8 +181,16 @@ public class Game {
 		if(!checkValidFall(currentBlock)) {
 			// If it can't go down any further, make a new block!
 			isMakingNewBlock = true;
+
+
+
 			// Place the current block into the tile area
 			for(int i = 0; i < currentBlock.getXPositions().length; i++){
+				// If it's above the top edge of the map, then tiles must be filled to the top and the player has lost
+				if(currentBlock.getYPositions()[i] < 0){
+					loseGame();
+					return;
+				}
 				tiles[ currentBlock.getXPositions()[i] ][ currentBlock.getYPositions()[i] ] = currentBlock.getBlockType();
 			}
 			// Nullify the current block
@@ -192,9 +204,15 @@ public class Game {
 
 			// Shift it down if it can be shifted down
 			currentBlock.shiftDown();
-
 			redraw();
 		}
+	}
+
+	/**
+	 * Ends the game, with the player losing. Returns to the main screen.
+	 */
+	private void loseGame(){
+		// TODO complete this method
 	}
 
 	/**
@@ -251,6 +269,10 @@ public class Game {
 			int checkYPosition = block.getYPositions()[k] + 1;
 			if(checkYPosition >= VERTICAL_TILES){
 				return false;
+			}
+			// If this point is above the screen, it must be able to fall
+			if(checkYPosition < 0){
+				continue;
 			}
 			if( tiles[checkXPosition][checkYPosition] != 0 && !block.containsPos(checkXPosition,checkYPosition) ){
 				return false;
@@ -392,12 +414,6 @@ public class Game {
 		if(currentBlock == null){ return; }
 		if(!isValidHorizontal(isRight)){ return; }
 
-		for(int i = 0; i < currentBlock.getXPositions().length; i++){
-			int delTileX = currentBlock.getXPositions()[i];
-			int delTileY = currentBlock.getYPositions()[i];
-			tiles[delTileX][delTileY] = 0;
-		}
-
 		if(isRight){
 			currentBlock.shiftRight();
 		}
@@ -422,6 +438,10 @@ public class Game {
 			int checkYPosition = currentBlock.getYPositions()[k];
 			if(checkXPosition >= HORIZONTAL_TILES || checkXPosition < 0){
 				return false;
+			}
+			// If it's above the screen and not outside the boundaries, it must be able to move horizontally
+			if(checkYPosition < 0){
+				continue;
 			}
 			if( tiles[checkXPosition][checkYPosition] != 0 && !currentBlock.containsPos(checkXPosition, checkYPosition) ){
 				return false;

@@ -30,7 +30,7 @@ public class Block {
 		xPositions = x;
 		yPositions = y;
 		this.originX = originX;
-		this.originY = originY;
+		this.originY = originY - 2;
 		this.blockType = blockType;
 		// Color is generated from the block type decremented, as a block type of 0 indicates a tile without a block
 		this.color = Game.BLOCK_COLORS[blockType-1];
