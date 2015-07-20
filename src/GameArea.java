@@ -3,7 +3,9 @@ import java.awt.event.*;
 import javax.swing.*;
 
 /**
- * The actual area that the game is played in. Handles key events.
+ * A JPanel in which a game of Tetris can be played.
+ * Handles key events and allows for redrawing.
+ * An instance of the game must be provided.
  *
  * @author Robert Campbell
  *
@@ -15,13 +17,25 @@ public class GameArea extends JPanel implements KeyListener {
 
 	Game gameInstance;
 
+	/**
+	 * Constructor; creates a new GameArea.
+	 *
+	 * @param gameInstance The Game instance linked to this GameArea instance.
+	 */
 	public GameArea(Game gameInstance){
 		this.setFocusable(true);
 		this.gameInstance = gameInstance;
 		this.addKeyListener(this);
 	}
 
+	/**
+	 * Unused; required to implement KeyListener.
+	 */
 	public void keyTyped(KeyEvent e){}
+
+	/**
+	 * Calls the appropriate methods in the linked game instance when keys are pressed.
+	 */
 	public void keyPressed(KeyEvent e){
 		// LEFT ARROW KEY PRESS: Move piece left
 		if(e.getKeyCode() == KeyEvent.VK_LEFT){
@@ -44,6 +58,10 @@ public class GameArea extends JPanel implements KeyListener {
 			gameInstance.turnCurrentPiece(true);
 		}
 	}
+
+	/**
+	 * Calls the appropriate methods in the linked game instance when keys are released.
+	 */
 	public void keyReleased(KeyEvent e){
 		// DOWN ARROW KEY RELEASE: Stop moving piece down faster
 		if(e.getKeyCode() == KeyEvent.VK_DOWN){
@@ -51,8 +69,11 @@ public class GameArea extends JPanel implements KeyListener {
 		}
 	}
 
+	/**
+	 * Redraws all components.
+	 */
 	@Override
-	public void paint(Graphics g){
+	public void paintComponent(Graphics g){
 		Graphics2D g2d = (Graphics2D) g;
 
 		// First, we make an array of tiles and what color they should be
@@ -86,24 +107,10 @@ public class GameArea extends JPanel implements KeyListener {
 			}
 		}
 
-		// If it's the first frame, just draw everything
-		if(oldTileColors == null){
-			for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
-				for(int j = 0; j < Game.VERTICAL_TILES; j++){
-					g2d.setColor(tileColors[i][j]);
-					g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
-				}
-			}
-		}
-		// Otherwise, scroll through all tiles and check to see which ones have changed, redrawing only those ones.
-		else{
-			for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
-				for(int j = 0; j < Game.VERTICAL_TILES; j++){
-					if(tileColors[i][j] != oldTileColors[i][j]){
-						g2d.setColor(tileColors[i][j]);
-						g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
-					}
-				}
+		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
+			for(int j = 0; j < Game.VERTICAL_TILES; j++){
+				g2d.setColor(tileColors[i][j]);
+				g2d.fillRect(i*Game.TILE_SIZE, j*Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
 			}
 		}
 

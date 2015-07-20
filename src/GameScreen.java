@@ -10,7 +10,7 @@ import java.awt.*;
 public class GameScreen{
 	private JFrame frame;
 	private JPanel gameArea;
-	private JPanel gui;
+	private JPanel gameUI;
 	private Game gameInstance;
 
 	public GameScreen(Game gameInstance){
@@ -24,16 +24,16 @@ public class GameScreen{
 
 		// Set up the panels
 		gameArea = new GameArea(this.gameInstance);
-		gui = new JPanel();
+		gameUI = new GameUI(this.gameInstance);
 		gameArea.setVisible(true);
-		gui.setVisible(true);
+		gameUI.setVisible(true);
 
 		gameArea.setPreferredSize(new Dimension(Game.GAME_AREA_WIDTH, Game.GAME_AREA_HEIGHT));
-		gui.setPreferredSize(new Dimension(Game.GUI_WIDTH, Game.GUI_HEIGHT));
+		gameUI.setPreferredSize(new Dimension(Game.GUI_WIDTH, Game.GUI_HEIGHT));
 
 		// Add the panels to the frame
 		frame.add(gameArea, BorderLayout.WEST);
-		frame.add(gui, BorderLayout.EAST);
+		frame.add(gameUI, BorderLayout.EAST);
 		// And finally set the frame to be visible
 		frame.setVisible(true);
 
@@ -43,6 +43,7 @@ public class GameScreen{
 	 * Repaints all graphics
 	 */
 	public void repaint(){
+		gameUI.repaint();
 		gameArea.repaint();
 	}
 }
