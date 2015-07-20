@@ -35,11 +35,12 @@ public class GameUI extends JPanel {
 	 */
 	@Override
 	public void paintComponent(Graphics g){
+		// TODO LWJGL lightweight java opengl
 		Graphics2D g2d = (Graphics2D) g;
 
 		// Firstly, redraw the background color over the area
 		g2d.setColor(BACKGROUND_COLOR);
-		g2d.drawRect(0,0,this.getWidth(),this.getHeight());
+		g2d.fillRect(0,0,this.getWidth(),this.getHeight());
 
 		// Then, draw the labels and data
 		g2d.setColor(LABEL_COLOR);

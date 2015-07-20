@@ -1,7 +1,8 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.lang.Math;
-import java.util.ArrayList;
+import java.util.*;
+import java.io.*;
 
 import javax.swing.Timer;
 
@@ -12,6 +13,13 @@ import javax.swing.Timer;
  *
  */
 public class Game {
+	// As a preface to anybody reading this code,
+	// A full line is not actually called a tetris.
+	// It's just called a full line.
+	// However, I thought it was, and I've left it
+	// that way in this code.
+	// (A tetris is actually 4 lines at once.)
+
 	public static void main(String[] args){
 		//Testing.runTests();
 		new Game(1,1);
@@ -38,6 +46,10 @@ public class Game {
 	public static final double FALL_DECREASE_MULTIPLIER = 0.01;
 	// The multiplier for fall delay given that the down button is pressed
 	public static final double DOWN_BUTTON_MULTIPLIER = 0.1;
+	// The base score gained from getting a tetris
+	public static final double TETRIS_SCORE = 1000;
+	// The score multipliers for getting 1, 2, 3 or 4 tetrises at once, respectively
+	public static final double[] TETRIS_MULTIPLIERS = { 1, 2, 4, 7 };
 
 	// Possible block initial positions (with half the width added on to the x positions)
 	public static final int[][] BLOCK_X_POSITIONS = {
@@ -97,7 +109,7 @@ public class Game {
 	 */
 	public Game(int difficulty, int initialLevel){
 		this.difficulty = difficulty;
-		this.level = initialLevel;
+		this.level = initialLevel - 1;
 
 		gameWindow = new GameScreen(this);
 
@@ -142,7 +154,7 @@ public class Game {
 	private void doBlocks(){
 		// Make a new block if necessary
 		if(isMakingNewBlock){
-			if(level != 1) { level++; }
+			level++;
 			// Generate a random number corresponding to the number of block to use
 			int randomBlockNumber = (int)Math.floor(Math.random() * (BLOCK_X_POSITIONS.length));
 
@@ -212,7 +224,49 @@ public class Game {
 	 * Ends the game, with the player losing. Returns to the main screen.
 	 */
 	private void loseGame(){
-		// TODO complete this method
+		// First, check the players score against the highscores list and edit the highscores list if necessary
+		try{
+			// Put the current highscores into an array
+			Scanner s = new Scanner(new File("highscores.txt"));
+			double[] highscores = new double[10];
+			int i = 0;
+			while(s.hasNextDouble()){
+				highscores[i] = s.nextDouble();
+				i++;
+			}
+			s.close();
+
+			// Then, find the index in this array where the highscore is
+			int highscorePlace = -1;
+			for(int j = 0; j < 10; j++){
+				if(score > highscores[j]){
+					highscorePlace = j;
+					break;
+				}
+			}
+
+			// Only edit the highscores list if the current score is greater than one of the highscores
+			if(highscorePlace != -1){
+				// Move all of the highscores at and below that place down by one (discarding the last one)
+				for(int j = 9; j >= highscorePlace; j++){
+					highscores[j+1] = highscores[j];
+				}
+				// And insert the current score at the specified place
+				highscores[highscorePlace] = score;
+
+				// Then, write the new highscores to the highscores list
+				PrintStream p = new PrintStream(new File("highscores.txt"));
+
+				for(int j = 0; j < 10; j++){
+					p.print(highscores[j]);
+				}
+
+				p.close();
+			}
+		}
+		catch(IOException e){
+			System.out.println("Could not read from OR write to highscores file. " + e);
+		}
 	}
 
 	/**
@@ -220,6 +274,7 @@ public class Game {
 	 * Removes the lines and lowers all blocks above it if any are found.
 	 */
 	public void checkForTetris(){
+		int numTetrises = 0;
 		// Scroll through all rows in the gameplay area
 		outerloop:
 		for(int i = Game.VERTICAL_TILES-1; i >= 0; i--){
@@ -236,7 +291,22 @@ public class Game {
 			}
 			// Drop all tiles above them down by one
 			shiftTilesDown(i);
+			// Increment the number of tetrises gotten this turn
+			numTetrises++;
+			// And start from the beginning again
+			i = Game.VERTICAL_TILES;
+			// Check for infinite loops
+			if(numTetrises > Game.VERTICAL_TILES){
+				throw new IllegalStateException("Infinite (or very long) loop encountered when checking for tetrises.");
+			}
 		}
+
+		// 4 will be the maximum multiplier. I don't think you can get more? This will prevent arrayoutofbounds if you can.
+		if(numTetrises > 4){ numTetrises = 4; }
+		// Add to the score:
+		// The number of tetrises gained * the score for a single tetris * the multiplier for that amount of tetrises * the log of the level+1, rounded down to a multiple of 10
+		int tempScore = (int)(numTetrises * TETRIS_SCORE * TETRIS_MULTIPLIERS[numTetrises] * (Math.log(level)+1) / 10);
+		score += tempScore*10;
 	}
 
 	/**

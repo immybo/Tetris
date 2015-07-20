@@ -18,7 +18,7 @@ public class GameScreen{
 
 		// Initialise the frame
 		frame = new JFrame("TETRIS");
-		frame.setSize(Game.GAME_AREA_WIDTH + Game.GUI_WIDTH, Game.GAME_AREA_HEIGHT);
+		frame.setSize(Game.GAME_AREA_WIDTH + Game.GUI_WIDTH + 5, Game.GAME_AREA_HEIGHT);
 		frame.setLocation(100, 100);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
