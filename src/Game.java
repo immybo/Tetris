@@ -20,11 +20,6 @@ public class Game {
 	// that way in this code.
 	// (A tetris is actually 4 lines at once.)
 
-	public static void main(String[] args){
-		//Testing.runTests();
-		new Game(1,1);
-	}
-
 	/**
 	 * STATIC
 	 */
@@ -38,9 +33,9 @@ public class Game {
 	// The amount of 'tiles' in the game and their sizes
 	public static final int TILE_SIZE = 30;
 	public static final int HORIZONTAL_TILES = GAME_AREA_WIDTH / TILE_SIZE; // Number of tiles depends on area size and tile size
-	public static final int VERTICAL_TILES = GAME_AREA_HEIGHT / TILE_SIZE - 1;
+	public static final int VERTICAL_TILES = GAME_AREA_HEIGHT / TILE_SIZE;
 	// The amount of milliseconds between downward movements at level one
-	public static final int FALL_DELAY = 250;
+	public static final int FALL_DELAY = 500;
 	// The millisecond value of the fall delay at a given level is:
 	// FALL_DELAY * 1/ e^(level*FALL_DECREASE_MULTIPLIER)
 	public static final double FALL_DECREASE_MULTIPLIER = 0.01;
@@ -89,6 +84,9 @@ public class Game {
 	// We need 2 tiles above to store blocks as they spawn above the top of the visible area
 	private int[][] tiles = new int[HORIZONTAL_TILES][VERTICAL_TILES];
 	private Block currentBlock;
+	
+	// The next 7 blocks to drop
+	private LinkedList<Integer> nextBlocks = new LinkedList<Integer>();
 
 	// Whether or not the down button is currently pressed down
 	public boolean isDownButton = false;
@@ -154,9 +152,25 @@ public class Game {
 	private void doBlocks(){
 		// Make a new block if necessary
 		if(isMakingNewBlock){
+			// Check if there are no remaining blocks in the queue
+			if(nextBlocks.isEmpty()){
+				// Set up a new randomised list of 0-6
+				
+				// Build a list of numbers from 0-6 (ordered)
+				ArrayList<Integer> nums = new ArrayList<Integer>();
+				for(int i = 0; i < 7; i++) nums.add(i);
+				
+				for(int i = 0; i < 7; i++){
+					// Get a random index
+					int index = (int)(Math.random()*(7-i));
+					// And insert this index from the numbers into the random list
+					nextBlocks.push(nums.get(index));
+					nums.remove(index);
+				}
+			}
+			
 			level++;
-			// Generate a random number corresponding to the number of block to use
-			int randomBlockNumber = (int)Math.floor(Math.random() * (BLOCK_X_POSITIONS.length));
+			int randomBlockNumber = nextBlocks.pop();
 
 			// Generate a new array for the x positions of the new block
 			int[] newBlockXPositions = new int[BLOCK_X_POSITIONS[randomBlockNumber].length];
@@ -218,12 +232,14 @@ public class Game {
 			currentBlock.shiftDown();
 			redraw();
 		}
+		
+		gameWindow.doKeys();
 	}
 
 	/**
 	 * Ends the game, with the player losing. Returns to the main screen.
 	 */
-	private void loseGame(){
+	public void loseGame(){
 		// First, check the players score against the highscores list and edit the highscores list if necessary
 		try{
 			// Put the current highscores into an array
@@ -248,7 +264,7 @@ public class Game {
 			// Only edit the highscores list if the current score is greater than one of the highscores
 			if(highscorePlace != -1){
 				// Move all of the highscores at and below that place down by one (discarding the last one)
-				for(int j = 9; j >= highscorePlace; j++){
+				for(int j = 8; j >= highscorePlace; j--){
 					highscores[j+1] = highscores[j];
 				}
 				// And insert the current score at the specified place
@@ -258,7 +274,7 @@ public class Game {
 				PrintStream p = new PrintStream(new File("highscores.txt"));
 
 				for(int j = 0; j < 10; j++){
-					p.print(highscores[j]);
+					p.print(highscores[j] + " ");
 				}
 
 				p.close();
@@ -266,6 +282,10 @@ public class Game {
 		}
 		catch(IOException e){
 			System.out.println("Could not read from OR write to highscores file. " + e);
+		}
+		finally{
+			blockTimer.stop();
+			gameWindow.dispose();
 		}
 	}
 
@@ -423,7 +443,7 @@ public class Game {
 	 * Redraws the game
 	 */
 	public void redraw(){
-		gameWindow.repaint();
+		gameWindow.redraw();
 	}
 
 	/**
@@ -490,8 +510,7 @@ public class Game {
 		else{
 			currentBlock.shiftLeft();
 		}
-
-		gameWindow.repaint();
+		redraw();
 	}
 
 	/**
@@ -543,6 +562,7 @@ public class Game {
 		if(!pieceCanTurn(isClockwise)){ return; }
 		if(currentBlock == null){ return; }
 		currentBlock.turn(isClockwise);
+		redraw();
 	}
 
 	/**

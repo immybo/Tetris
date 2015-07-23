@@ -45,9 +45,9 @@ public class MenuScreen implements ActionListener {
 		difficultySlider = new JSlider(1,5,3);
 
 		// Level label
-		JLabel initialLevelSliderLabel = new JLabel("Initial Level (1-100)",(int) Component.CENTER_ALIGNMENT);
+		JLabel initialLevelSliderLabel = new JLabel("Initial Level (1-1000)",(int) Component.CENTER_ALIGNMENT);
 		// Slider from 1-100 with default value 1
-		initialLevelSlider = new JSlider(1,100,1);
+		initialLevelSlider = new JSlider(1,1000,1);
 
 		// Button to access highscores
 		highscoreButton = new JButton("Highscores");
@@ -96,14 +96,15 @@ public class MenuScreen implements ActionListener {
 		highscoreFrame.setLayout(new GridLayout(0,1));
 
 		// Create a scanner to read from the highscores file
-		int[] highscores = new int[10];
+		double[] highscores = new double[10];
 		try{
-			Scanner s = new Scanner(new File("highscores"));
+			Scanner s = new Scanner(new File("highscores.txt"));
 			for(int i = 0; i < 10; i++){
-				if(s.hasNextInt()){
-					highscores[i] = s.nextInt();
+				if(s.hasNextDouble()){
+					highscores[i] = s.nextDouble();
 				}
 			}
+			s.close();
 		}
 		catch(IOException e){
 			System.out.println("Failed to read from highscores file. "+e);

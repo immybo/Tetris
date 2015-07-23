@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry excluding="src/" kind="src" path=""/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/am/state-opera/home1/campberobe1/LWJGL/jar/lwjgl.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="E:/Tetris/lwjgl/native"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="E:/Tetris/lwjgl/jar/lwjgl.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
