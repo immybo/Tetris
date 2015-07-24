@@ -303,10 +303,10 @@ public class Game {
 		catch(IOException e){
 			System.out.println("Could not read from OR write to highscores file. " + e);
 		}
-		// Afterwards, freeze the game and tell gameWindow to display that the player has lost
+		// Afterwards, freeze the game
 		finally{
 			blockTimer.stop();
-			gameWindow.loseGame();
+			gameWindow.dispose();
 		}
 	}
 

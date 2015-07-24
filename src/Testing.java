@@ -1,4 +1,3 @@
-import java.awt.Color;
 
 /**
  * Code for testing the tetris game. Call Testing.runTests() to run all tests.

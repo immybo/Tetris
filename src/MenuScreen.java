@@ -20,7 +20,6 @@ public class MenuScreen implements ActionListener {
 
 	// NON-STATIC
 	private JFrame frame;
-	private JPanel menuArea;
 
 	private JSlider difficultySlider;
 	private JSlider initialLevelSlider;

@@ -1,8 +1,5 @@
 import java.nio.*;
-import java.io.*;
 import java.awt.*;
-import java.awt.image.*;
-import java.util.*;
 
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
@@ -108,13 +105,6 @@ public class GameScreen{
 	}
 
 	/**
-	 * Displays in text that the player has lost, and provides them with a key to restart the game
-	 */
-	public void loseGame(){
-		//TODO Complete has lost method, implement text
-	}
-
-	/**
 	 * Checks for the queued key action and calls the required method based on it.
 	 */
 	public void doKeys(){
@@ -155,7 +145,6 @@ public class GameScreen{
 		else{
 			// Stop the game
 			gameInstance.loseGame();
-			dispose();
 		}
 	}
 
@@ -180,7 +169,6 @@ public class GameScreen{
 		else{
 			// Stop the game
 			gameInstance.loseGame();
-			dispose();
 		}
 	}
 
