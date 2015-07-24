@@ -1,6 +1,7 @@
 import java.nio.*;
 import java.io.*;
 import java.awt.*;
+import java.awt.image.*;
 import java.util.*;
 
 import org.lwjgl.glfw.*;
@@ -154,6 +155,7 @@ public class GameScreen{
 		else{
 			// Stop the game
 			gameInstance.loseGame();
+			dispose();
 		}
 	}
 
@@ -170,7 +172,6 @@ public class GameScreen{
 
 			// Redraws the relevant areas
 			redrawGameArea();
-			redrawUI();
 
 			glfwSwapBuffers(glWindow);
 			// Checks for key events
@@ -179,6 +180,7 @@ public class GameScreen{
 		else{
 			// Stop the game
 			gameInstance.loseGame();
+			dispose();
 		}
 	}
 
@@ -228,19 +230,6 @@ public class GameScreen{
 			}
 		}
 	}
-
-
-	/**
-	 * Defines redrawing the UI
-	 */
-	private void redrawUI(){
-		// TODO Drawing text
-		/*font.drawString(Game.GAME_AREA_WIDTH + 100, 200, "SCORE");
-		font.drawString(Game.GAME_AREA_WIDTH + 100, 230, gameInstance.getScore()+"");
-		font.drawString(Game.GAME_AREA_WIDTH + 100, 300, "LEVEL");
-		font.drawString(Game.GAME_AREA_WIDTH + 100, 330, gameInstance.getLevel()+"");*/
-	}
-
 
 	/**
 	 * Draws a rectangle with the specified parameters.

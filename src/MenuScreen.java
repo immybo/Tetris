@@ -15,8 +15,8 @@ import java.io.*;
  */
 public class MenuScreen implements ActionListener {
 	// STATIC
-	private static final int MENU_SCREEN_WIDTH = 500;
-	private static final int MENU_SCREEN_HEIGHT = 500;
+	private static final int MENU_SCREEN_WIDTH = 200;
+	private static final int MENU_SCREEN_HEIGHT = 300;
 
 	// NON-STATIC
 	private JFrame frame;
@@ -37,17 +37,40 @@ public class MenuScreen implements ActionListener {
 		frame.setSize(MenuScreen.MENU_SCREEN_WIDTH, MenuScreen.MENU_SCREEN_HEIGHT);
 		frame.setLocation(100, 100);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+		frame.setLayout(new BorderLayout());
+		frame.setResizable(false);
+		
+		JPanel topPanel = new JPanel();
+		topPanel.setPreferredSize(new Dimension(100,50));
+		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+		frame.add(topPanel, BorderLayout.NORTH);
+		
+		JPanel midPanel = new JPanel();
+		midPanel.setLayout(new BoxLayout(midPanel, BoxLayout.Y_AXIS));
+		frame.add(midPanel, BorderLayout.CENTER);
+		
+		JPanel botPanel = new JPanel();
+		botPanel.setLayout(new BoxLayout(botPanel, BoxLayout.Y_AXIS));
+		frame.add(botPanel, BorderLayout.SOUTH);
 
 		// Descriptor label
-		JLabel difficultySliderLabel = new JLabel("Difficulty (1-5)",(int) Component.CENTER_ALIGNMENT);
+		JLabel difficultySliderLabel = new JLabel("Difficulty (1-5)");
+		difficultySliderLabel.setAlignmentX(0.5f);
 		// New slider from 1-5 with default value 3
 		difficultySlider = new JSlider(1,5,3);
 
 		// Level label
-		JLabel initialLevelSliderLabel = new JLabel("Initial Level (1-1000)",(int) Component.CENTER_ALIGNMENT);
+		JLabel initialLevelSliderLabel = new JLabel("Initial Level (1-100)");
+		initialLevelSliderLabel.setAlignmentX(0.5f);
 		// Slider from 1-100 with default value 1
-		initialLevelSlider = new JSlider(1,1000,1);
+		initialLevelSlider = new JSlider(1,100,1);
+		
+		// Title label
+		JLabel titleLabel = new JLabel("TETRIS");
+		titleLabel.setAlignmentX(0.3f);
+		JLabel subtitleLabel = new JLabel("First-year Edition");
+		subtitleLabel.setAlignmentX(0.45f);
+		
 
 		// Button to access highscores
 		highscoreButton = new JButton("Highscores");
@@ -59,19 +82,23 @@ public class MenuScreen implements ActionListener {
 		startGame.setActionCommand("startGame");
 		startGame.addActionListener(this);
 
-		// Align all content in the center
+		// Align all
 		difficultySlider.setAlignmentX(Component.CENTER_ALIGNMENT);
 		initialLevelSlider.setAlignmentX(Component.CENTER_ALIGNMENT);
 		highscoreButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		startGame.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		// Add the content to the frame
-		frame.add(difficultySliderLabel);
-		frame.add(difficultySlider);
-		frame.add(initialLevelSliderLabel);
-		frame.add(initialLevelSlider);
-		frame.add(highscoreButton);
-		frame.add(startGame);
+		botPanel.add(difficultySliderLabel);
+		botPanel.add(difficultySlider);
+		botPanel.add(initialLevelSliderLabel);
+		botPanel.add(initialLevelSlider);
+		midPanel.add(Box.createRigidArea(new Dimension(100, 100)));
+		midPanel.add(highscoreButton);
+		midPanel.add(startGame);
+		topPanel.add(Box.createRigidArea(new Dimension(10,10)));
+		topPanel.add(titleLabel);
+		topPanel.add(subtitleLabel);
 
 		// And finally set the frame to be visible
 		frame.setVisible(true);
