@@ -7,7 +7,7 @@ import java.io.*;
 import javax.swing.Timer;
 
 /**
- * Handles the top level functions of a game of tetris.
+ * Handles a game of Tetris.
  *
  * @author Robert Campbell
  *
@@ -21,7 +21,7 @@ public class Game {
 	// (A tetris is actually 4 lines at once.)
 
 	/**
-	 * STATIC
+	 * GAME PARAMETERS
 	 */
 
 	// The default initial dimensions of the game window
@@ -42,7 +42,7 @@ public class Game {
 	// The multiplier for fall delay given that the down button is pressed
 	public static final double DOWN_BUTTON_MULTIPLIER = 0.1;
 	// The base score gained from getting a tetris
-	public static final double TETRIS_SCORE = 1000;
+	public static final double TETRIS_SCORE = 100;
 	// The score multipliers for getting 1, 2, 3 or 4 tetrises at once, respectively
 	public static final double[] TETRIS_MULTIPLIERS = { 1, 2, 4, 7 };
 
@@ -84,8 +84,8 @@ public class Game {
 	// We need 2 tiles above to store blocks as they spawn above the top of the visible area
 	private int[][] tiles = new int[HORIZONTAL_TILES][VERTICAL_TILES];
 	private Block currentBlock;
-	
-	// The next 7 blocks to drop
+
+	// The order of the next blocks to drop
 	private LinkedList<Integer> nextBlocks = new LinkedList<Integer>();
 
 	// Whether or not the down button is currently pressed down
@@ -149,55 +149,54 @@ public class Game {
 		}
 	}
 
+	/**
+	 * Updates the game of Tetris every frame.
+	 * - Creates a new block if there isn't one currently falling.
+	 * - Chooses which blocks come next.
+	 * - Causes the current block to drop every frame if it can.
+	 * - Redraws the game every frame.
+	 */
 	private void doBlocks(){
 		// Make a new block if necessary
 		if(isMakingNewBlock){
-			// Check if there are no remaining blocks in the queue
-			if(nextBlocks.isEmpty()){
-				// Set up a new randomised list of 0-6
-				
-				// Build a list of numbers from 0-6 (ordered)
-				ArrayList<Integer> nums = new ArrayList<Integer>();
-				for(int i = 0; i < 7; i++) nums.add(i);
-				
-				for(int i = 0; i < 7; i++){
-					// Get a random index
-					int index = (int)(Math.random()*(7-i));
-					// And insert this index from the numbers into the random list
-					nextBlocks.push(nums.get(index));
-					nums.remove(index);
-				}
+			// Check if there are fewer than or equal to 7 remaining blocks in the queue; if there are,
+			// we should generate a new set of blocks
+			if(nextBlocks.size() <= 7){
+				addBlocksToQueue();
 			}
-			
+
+			// Every time a new block is made, increment the 'level'
 			level++;
-			int randomBlockNumber = nextBlocks.pop();
+
+			// Grab the number of the block to generate from nextBlocks
+			int nextBlock = nextBlocks.pop();
 
 			// Generate a new array for the x positions of the new block
-			int[] newBlockXPositions = new int[BLOCK_X_POSITIONS[randomBlockNumber].length];
+			int[] newBlockXPositions = new int[BLOCK_X_POSITIONS[nextBlock].length];
 			// And one for the y positions
-			int[] newBlockYPositions = new int[BLOCK_Y_POSITIONS[randomBlockNumber].length];
+			int[] newBlockYPositions = new int[BLOCK_Y_POSITIONS[nextBlock].length];
 
 			// Because the new block must appear in the center of the area, and BLOCK_X_POSITIONS gives values
 			// relative to this center, add half of the width of the area to every value in the array.
 			// We also have to subtract some from the y positions to make the block initially above the screen
-			for(int i = 0; i < BLOCK_X_POSITIONS[randomBlockNumber].length; i++){
-				newBlockXPositions[i] = BLOCK_X_POSITIONS[randomBlockNumber][i] + (int)Math.floor(HORIZONTAL_TILES/2);
-				newBlockYPositions[i] = BLOCK_Y_POSITIONS[randomBlockNumber][i] - 2;
+			for(int i = 0; i < BLOCK_X_POSITIONS[nextBlock].length; i++){
+				newBlockXPositions[i] = BLOCK_X_POSITIONS[nextBlock][i] + (int)Math.floor(HORIZONTAL_TILES/2);
+				newBlockYPositions[i] = BLOCK_Y_POSITIONS[nextBlock][i] - 2;
 			}
 
 			// Make the new block
 			newBlock(
-						// x positions come from the array we just generated
+						// X and y positions come from the arrays that we just generated
 						newBlockXPositions,
-						// y positions also come from an array we just generated
 						newBlockYPositions,
-						// the origin x and y positions have static arrays
-						BLOCK_ORIGIN_X_POSITIONS[randomBlockNumber] + (int)Math.floor(HORIZONTAL_TILES/2),
-						BLOCK_ORIGIN_Y_POSITIONS[randomBlockNumber],
-						// and the block type comes from our random number incremented (as 0 indicates a tile without a block)
-						randomBlockNumber+1
+						// The origin x and y positions have static arrays
+						BLOCK_ORIGIN_X_POSITIONS[nextBlock] + (int)Math.floor(HORIZONTAL_TILES/2),
+						BLOCK_ORIGIN_Y_POSITIONS[nextBlock],
+						// And the block type comes from our random number incremented (as 0 indicates a tile without a block)
+						nextBlock+1
 					);
-			// Wait until the next iteration to move the block
+
+			// Wait until the next iteration of the game loop to move the block, but redraw the frame and update the flag now
 			redraw();
 			isMakingNewBlock = false;
 			return;
@@ -205,14 +204,12 @@ public class Game {
 
 		// Check the last created block
 		if(!checkValidFall(currentBlock)) {
-			// If it can't go down any further, make a new block!
+			// If it can't go down any further, make a new block on the next frame
 			isMakingNewBlock = true;
-
-
 
 			// Place the current block into the tile area
 			for(int i = 0; i < currentBlock.getXPositions().length; i++){
-				// If it's above the top edge of the map, then tiles must be filled to the top and the player has lost
+				// If it's above the top edge of the map and can't move down, then tiles must be filled to the top and the player has lost
 				if(currentBlock.getYPositions()[i] < 0){
 					loseGame();
 					return;
@@ -232,8 +229,31 @@ public class Game {
 			currentBlock.shiftDown();
 			redraw();
 		}
-		
+
 		gameWindow.doKeys();
+	}
+
+	/**
+	 * Inserts a new randomised list of 7 blocks to the block queue
+	 */
+	private void addBlocksToQueue(){
+		// Tetris uses an algorithm such that, for each group of 7 blocks dropped,
+		// there will be no duplicates, meaning that one of each type of block must
+		// drop exactly one-seventh of the time.
+
+		// Sets up a new random list of blocks if the nextBlocks list gets to too low size
+
+		// Build a list of numbers from 0-6 (ordered)
+		ArrayList<Integer> nums = new ArrayList<Integer>();
+		for(int i = 0; i < 7; i++) nums.add(i);
+
+		for(int i = 0; i < 7; i++){
+			// Get a random index
+			int index = (int)(Math.random()*(7-i));
+			// And insert this index from the numbers into the randomised queue
+			nextBlocks.push(nums.get(index));
+			nums.remove(index);
+		}
 	}
 
 	/**
@@ -283,9 +303,10 @@ public class Game {
 		catch(IOException e){
 			System.out.println("Could not read from OR write to highscores file. " + e);
 		}
+		// Afterwards, freeze the game and tell gameWindow to display that the player has lost
 		finally{
 			blockTimer.stop();
-			gameWindow.dispose();
+			gameWindow.loseGame();
 		}
 	}
 
@@ -321,24 +342,28 @@ public class Game {
 			}
 		}
 
-		// 4 will be the maximum multiplier. I don't think you can get more? This will prevent arrayoutofbounds if you can.
+		// 4 is the maximum number of cleared lines you can have at once.
 		if(numTetrises > 4){ numTetrises = 4; }
+
 		// Add to the score:
-		// The number of tetrises gained * the score for a single tetris * the multiplier for that amount of tetrises * the log of the level+1, rounded down to a multiple of 10
-		int tempScore = (int)(numTetrises * TETRIS_SCORE * TETRIS_MULTIPLIERS[numTetrises] * (Math.log(level)+1) / 10);
+		int tempScore = (int)(numTetrises * TETRIS_SCORE * TETRIS_MULTIPLIERS[numTetrises] * (Math.log(level)+1));
+		// We want the score to be a multiple of 10.
+		// Why? It makes it look better, clearly.
 		score += tempScore*10;
 	}
 
 	/**
-	 * Shifts all tiles above a given line down by one
+	 * Shifts all tiles *above a given line* down by one
 	 * @param y The line above which to shift all tiles down
 	 */
 	private void shiftTilesDown(int y){
-		// Scroll through the rows in reverse order (up vertically) so as not to override rows which we drop down in future
+		// Scroll through the rows in reverse order (up vertically) so as
+		// not to override rows which we want to drop down in future iterations
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			for(int j = y-1; j >= 0; j--){
-				// Do nothing to tiles which don't have anything on them
+				// If a tile isn't empty,
 				if(tiles[i][j] != 0){
+					// Shift it down
 					tiles[i][j+1] = tiles[i][j];
 					tiles[i][j] = 0;
 				}
@@ -352,11 +377,14 @@ public class Game {
 	 * @return Whether or not the fall is valid (true for valid)
 	 */
 	private boolean checkValidFall(Block block){
-		// Check that there is no block below it (otherwise don't shift down)
+		// Check that there is no block below it
+
 		// For every point in the block,
 		for(int k = 0; k < block.getXPositions().length; k++){
+			// Get the position to check (which is one down from the current position)
 			int checkXPosition = block.getXPositions()[k];
 			int checkYPosition = block.getYPositions()[k] + 1;
+			// Check if it's at the bottom of the screen
 			if(checkYPosition >= VERTICAL_TILES){
 				return false;
 			}
@@ -364,6 +392,7 @@ public class Game {
 			if(checkYPosition < 0){
 				continue;
 			}
+			// Check it against the tile entry for that position
 			if( tiles[checkXPosition][checkYPosition] != 0 && !block.containsPos(checkXPosition,checkYPosition) ){
 				return false;
 			}
@@ -451,19 +480,21 @@ public class Game {
 	 * Sets the score to 0 if it would go below 0.
 	 */
 	public void incrementScore(double amount){
-		if(amount > score){
+		if(amount < -score){
 			score = 0;
 		}
 		else{
 			score += amount;
 		}
 	}
+
 	/**
 	 * Returns the score value
 	 */
 	public double getScore(){
 		return score;
 	}
+
 	/**
 	 * Sets the score to a given number
 	 */
@@ -477,6 +508,7 @@ public class Game {
 	public int getDifficulty(){
 		return difficulty;
 	}
+
 	/**
 	 * Sets the difficulty to a given number
 	 */
@@ -490,6 +522,7 @@ public class Game {
 	public int getLevel(){
 		return level;
 	}
+
 	/**
 	 * Sets the level to a given number
 	 */
@@ -498,7 +531,8 @@ public class Game {
 	}
 
 	/**
-	 * Moves the last block horizontally one tile
+	 * Moves the last block horizontally one tile.
+	 * Will move right if isRight, and left otherwise.
 	 */
 	public void moveHorizontally(boolean isRight){
 		if(currentBlock == null){ return; }
@@ -515,7 +549,7 @@ public class Game {
 
 	/**
 	 * Checks to see if the current block can move horizontally
-	 * @param isRight True if you're checking to the right, false if not
+	 * @param isRight True if checking to see if it can move right, false if checking to see if it can move left
 	 */
 	private boolean isValidHorizontal(boolean isRight){
 		// Check that there is no block to the right/left of it (otherwise don't shift)
@@ -540,7 +574,8 @@ public class Game {
 	}
 
 	/**
-	 * Causes the current block to move down much faster, until haltRushDown() is called.
+	 * Causes the current block to move down much faster.
+	 * See haltRushDown().
 	 */
 	public void rushDown(){
 		isDownButton = true;
@@ -548,6 +583,7 @@ public class Game {
 	}
 	/**
 	 * Causes the current block to halt moving down much faster.
+	 * See rushDown().
 	 */
 	public void haltRushDown(){
 		isDownButton = false;

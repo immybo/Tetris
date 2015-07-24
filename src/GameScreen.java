@@ -33,20 +33,21 @@ public class GameScreen{
 	private long glWindow;
 
 	private Game gameInstance;
-	
+
 	// Keys used for movement and rotation
-	private int KEY_MOVE_DOWN = GLFW_KEY_DOWN;
-	private int KEY_MOVE_LEFT = GLFW_KEY_LEFT;
-	private int KEY_MOVE_RIGHT = GLFW_KEY_RIGHT;
-	private int KEY_ROTATE_RIGHT = GLFW_KEY_E;
-	private int KEY_ROTATE_LEFT = GLFW_KEY_Q;
+	private final int KEY_MOVE_DOWN = GLFW_KEY_DOWN;
+	private final int KEY_MOVE_LEFT = GLFW_KEY_LEFT;
+	private final int KEY_MOVE_RIGHT = GLFW_KEY_RIGHT;
+	private final int KEY_ROTATE_RIGHT = GLFW_KEY_E;
+	private final int KEY_ROTATE_LEFT = GLFW_KEY_Q;
+	private final int KEY_END_GAME = GLFW_KEY_ESCAPE;
 	// The key that has been pressed down, indicating the key action that should be taken
 	int currentAction = 0;
 	// Whether the key for the current action is still down
 	boolean currentActionKey = false;
 	// Whether the current action has been completed at least once
 	boolean currentActionCompleted = false;
-	
+
 
 	public GameScreen(Game gameInstance){
 		this.gameInstance = gameInstance;
@@ -89,7 +90,7 @@ public class GameScreen{
 					currentActionKey = false;
 				}
 			}
-			
+
 		});
 
 		// Get the resolution of the primary monitor and set the window to be in the center
@@ -98,13 +99,20 @@ public class GameScreen{
 
 		glfwMakeContextCurrent(glWindow);
 		GLContext.createFromCurrent();
-		
+
 		glfwSwapInterval(1);
 
 		glfwShowWindow(glWindow);
 
 	}
-	
+
+	/**
+	 * Displays in text that the player has lost, and provides them with a key to restart the game
+	 */
+	public void loseGame(){
+		//TODO Complete has lost method, implement text
+	}
+
 	/**
 	 * Checks for the queued key action and calls the required method based on it.
 	 */
@@ -113,14 +121,33 @@ public class GameScreen{
 		if(glfwWindowShouldClose(glWindow) == GL_FALSE){
 			// If the key is no longer down and the action has already been done, don't do anything
 			if(!currentActionKey && currentActionCompleted){ currentAction = 0; }
+
 			// Otherwise, complete the appropriate action
-			if(currentAction == KEY_MOVE_LEFT) gameInstance.moveHorizontally(false);
-			else if(currentAction == KEY_MOVE_RIGHT) gameInstance.moveHorizontally(true);
-			else if(currentAction == KEY_ROTATE_RIGHT) gameInstance.turnCurrentPiece(false);
-			else if(currentAction == KEY_ROTATE_LEFT) gameInstance.turnCurrentPiece(false);
-			else if(currentAction == KEY_MOVE_DOWN) gameInstance.rushDown();
-			else gameInstance.haltRushDown();
-			
+			switch(currentAction){
+			case KEY_MOVE_LEFT:
+				gameInstance.moveHorizontally(false);
+				break;
+			case KEY_MOVE_RIGHT:
+				gameInstance.moveHorizontally(true);
+				break;
+			case KEY_ROTATE_RIGHT:
+				gameInstance.turnCurrentPiece(true);
+				break;
+			case KEY_ROTATE_LEFT:
+				gameInstance.turnCurrentPiece(false);
+				break;
+			case KEY_MOVE_DOWN:
+				gameInstance.rushDown();
+				break;
+			case KEY_END_GAME:
+				gameInstance.loseGame();
+				dispose();
+				break;
+			default:
+				gameInstance.haltRushDown();
+				break;
+			}
+
 			// And change the completed flag to true (note that this flag is unimportant if currentActon == 0)
 			currentActionCompleted = true;
 		}
@@ -136,17 +163,17 @@ public class GameScreen{
 	public void redraw(){
 		// Make sure that the window shouldn't have been closed
 		if(glfwWindowShouldClose(glWindow) == GL_FALSE){
-
 			// Set the 'default' color
 			glClearColor(BACKGROUND_COLOR.getRed(),BACKGROUND_COLOR.getBlue(),BACKGROUND_COLOR.getGreen(),BACKGROUND_COLOR.getAlpha());
-
+			// And clear the screen
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			// Redraws the relevant areas
 			redrawGameArea();
 			redrawUI();
 
-			glfwSwapBuffers(glWindow);// Checks for key events (and invokes the relevant methods if necessary
+			glfwSwapBuffers(glWindow);
+			// Checks for key events
 			glfwPollEvents();
 		}
 		else{
@@ -154,7 +181,7 @@ public class GameScreen{
 			gameInstance.loseGame();
 		}
 	}
-	
+
 	/**
 	 * Disposes of GLFW assets
 	 */
@@ -167,8 +194,10 @@ public class GameScreen{
 	 * Defines redrawing the game area
 	 */
 	private void redrawGameArea(){
+		// Colors which each tile will be
 		Color[][] tileColors = new Color[Game.HORIZONTAL_TILES][Game.VERTICAL_TILES];
 
+		// Find the color that each tile is meant to be and set the relevant spot in tileColors to it
 		for(int i = 0; i < Game.HORIZONTAL_TILES; i++){
 			for(int j = 0; j < Game.VERTICAL_TILES; j++){
 				int tileValue = gameInstance.getTileValue(i,j)-1;
@@ -179,7 +208,8 @@ public class GameScreen{
 				tileColors[i][j] = Game.BLOCK_COLORS[tileValue];
 			}
 		}
-		// Grab the tiles from the current block as well
+
+		// Grab the tiles from the current block as well, since they can't be found with gameInstance.getTileValue(x,y)
 		Block currentBlock = gameInstance.getCurrentBlock();
 		if(currentBlock != null){
 			Color tileValue = currentBlock.getColor();
@@ -204,6 +234,7 @@ public class GameScreen{
 	 * Defines redrawing the UI
 	 */
 	private void redrawUI(){
+		// TODO Drawing text
 		/*font.drawString(Game.GAME_AREA_WIDTH + 100, 200, "SCORE");
 		font.drawString(Game.GAME_AREA_WIDTH + 100, 230, gameInstance.getScore()+"");
 		font.drawString(Game.GAME_AREA_WIDTH + 100, 300, "LEVEL");
@@ -213,29 +244,29 @@ public class GameScreen{
 
 	/**
 	 * Draws a rectangle with the specified parameters.
+	 * @param x The left-most x position of the rectangle.
+	 * @param y The top-most y position of the rectangle.
+	 * @param width The width of the rectangle.
+	 * @param height The height of the rectangle.
+	 * @param fillColor The color that the rectangle will be filled with.
+	 * @param borderColor The color of the border of the rectangle.
 	 */
 	private void drawRect(int x, int y, int width, int height, Color fillColor, Color borderColor){
-
-		// Translate the co-ordinates to between -1 and 1 (screen co-ordinates are between these ranges for OpenGL)
+		// Translate the co-ordinates to be appropriate for OpenGL
 		float tX = getFloatX(x);
 		float tY = getFloatY(y);
 
+		// Find the right and bottom most positions of the rectangle
 		int x2 = x + width;
 		int y2 = y + height;
 
+		// Translate the right and bottom most positions to be appropriate for OpenGL
 		float tX2 = getFloatX(x2);
 		float tY2 = getFloatY(y2);
 
-		float fillRed = (float)fillColor.getRed()/255;
-		float fillGreen = (float)fillColor.getGreen()/255;
-		float fillBlue = (float)fillColor.getBlue()/255;
-		
-		float borderRed = (float)borderColor.getRed()/255;
-		float borderGreen = (float)borderColor.getGreen()/255;
-		float borderBlue = (float)borderColor.getBlue()/255;
-		
+
 		// Set the color to the fill color and draw the filled rectangle
-		glColor3f(fillRed, fillGreen, fillBlue);
+		glColor3f(fillColor.getRGBComponents(null)[0], fillColor.getRGBComponents(null)[1], fillColor.getRGBComponents(null)[2]);
 		glBegin(GL_QUADS);
 			glVertex2f(tX, tY);
 			glVertex2f(tX, tY2);
@@ -244,7 +275,7 @@ public class GameScreen{
 		glEnd();
 
 		// Then set the color to the border color and draw a bunch of lines around the rectangle area
-		glColor3f(borderRed, borderGreen, borderBlue);
+		glColor3f(borderColor.getRGBComponents(null)[0], borderColor.getRGBComponents(null)[1], borderColor.getRGBComponents(null)[2]);
 		glBegin(GL_LINE_LOOP);
 			glVertex2f(tX, tY);
 			glVertex2f(tX, tY2);
@@ -254,36 +285,17 @@ public class GameScreen{
 	}
 
 	/**
-	 * Draws a line between the given positions
-	 * @param x One of the x positions, corresponding to y.
-	 * @param y One of the y positions, corresponding to x.
-	 * @param x2 One of the x positions, corresponding to y2.
-	 * @param y2 One of the y positions, corresponding to x2.
-	 * @param color The color of the line.
-	 */
-	private void drawLine(int x, int y, int x2, int y2, Color color){
-		float tX = getFloatX(x);
-		float tY = getFloatY(y);
-		float tX2 = getFloatX(x2);
-		float tY2 = getFloatY(y2);
-
-		glColor3f((float)color.getRed()/255, (float)color.getGreen()/255, (float)color.getBlue()/255);
-		glBegin(GL_LINE);
-			glVertex2f(tX, tY);
-			glVertex2f(tX2, tY2);
-		glEnd();
-	}
-
-	/**
-	 * Converts the specified x value to a float.
+	 * Converts the specified x value to a float between -1 and 1;
+	 * ordinates in OpenGL are between these values.
 	 */
 	private float getFloatX(int x){
-		return ((float)(x*2) / (float)this.width - 1);
+		return ((float)(x*2) / this.width - 1);
 	}
 	/**
-	 * Converts the specified y value to a float.
+	 * Converts the specified y value to a float between -1 and 1;
+	 * ordinates in OpenGL are between these values.
 	 */
 	private float getFloatY(int y){
-		return ((float)(y*2) / (float)this.height - 1) *-1;
+		return ((float)(y*2) / this.height - 1) *-1;
 	}
 }
